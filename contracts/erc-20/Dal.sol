@@ -7,11 +7,12 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
 import "hardhat/console.sol";
 
-// TODO: Emit Event
 contract Dal is ERC20, Ownable, ERC20Capped {
     address public minter;
 
     // mapping(address => uint) public balances;
+
+    event Mint(address to, uint value);
 
     constructor(
         uint cap
@@ -33,5 +34,6 @@ contract Dal is ERC20, Ownable, ERC20Capped {
 
     function mint(address account, uint256 value) public onlyOwner {
         _mint(account, value);
+        emit Mint(account, value);
     }
 }

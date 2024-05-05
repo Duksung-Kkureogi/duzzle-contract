@@ -3,6 +3,8 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import { Dal } from "../typechain-types/contracts/erc-20/Dal";
+import { EventLog } from "ethers";
+import { EventTopic } from "./enum/test";
 
 describe("Dal", function () {
   let dalInstance: Dal;
@@ -41,6 +43,41 @@ describe("Dal", function () {
   });
 
   describe("Transactions", function () {
+    it("Emits a transfer event for newly minted", async function () {
+      await expect(dalInstance.mint(addr1.address, 1))
+        .to.emit(dalInstance, "Transfer")
+        .withArgs(
+          "0x0000000000000000000000000000000000000000",
+          addr1.address,
+          1
+        );
+
+      const txResponse = await dalInstance.mint(addr1.address, 1);
+      const txReceipt = await txResponse.wait();
+      const transferEvent = txReceipt?.logs.find(
+        (e) => e.topics[0] === EventTopic.Transfer
+      );
+      const [from, to, value] = (<EventLog>transferEvent).args;
+      expect(from).to.equal("0x0000000000000000000000000000000000000000");
+      expect(to).to.equal(addr1.address);
+      expect(value).to.equal(1);
+    });
+
+    it("Emits a mint event for newly minted", async function () {
+      await expect(dalInstance.mint(addr1.address, 3))
+        .to.emit(dalInstance, "Mint")
+        .withArgs(addr1.address, 3);
+
+      const txResponse = await dalInstance.mint(addr1.address, 3);
+      const txReceipt = await txResponse.wait();
+      const transferEvent = txReceipt?.logs.find(
+        (e) => e.topics[0] === EventTopic.Mint
+      );
+      const [to, value] = (<EventLog>transferEvent).args;
+      expect(to).to.equal(addr1.address);
+      expect(value).to.equal(3);
+    });
+
     it("Transfer", async function () {
       const INITIAL_SUPPLY: number = 50;
       await dalInstance.mint(owner.address, INITIAL_SUPPLY);

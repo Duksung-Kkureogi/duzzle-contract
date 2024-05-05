@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { EventLog, keccak256 } from "ethers";
 import { ethers } from "hardhat";
 import { PuzzlePiece } from "./../typechain-types/contracts/erc-721/PuzzlePiece";
+import { EventTopic } from "./enum/test";
 
 describe("PuzzlePiece", function () {
   let puzzlePieceInstance: PuzzlePiece;
@@ -46,21 +47,16 @@ describe("PuzzlePiece", function () {
   });
 
   describe("Mint", function () {
-    const MINT_EVENT_TOPIC =
-      "0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885";
-
-    const TRANSFER_EVENT_TOPIC =
-      "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
     it("Is able to query the NFT balances of an address", async function () {
       const [, tokenId1] = (
         (
           await (await puzzlePieceInstance.mint(owner, "puzzle/0")).wait()
-        )?.logs.find((e) => e.topics[0] === MINT_EVENT_TOPIC) as EventLog
+        )?.logs.find((e) => e.topics[0] === EventTopic.Mint) as EventLog
       ).args;
       const [, tokenId2] = (
         (
           await (await puzzlePieceInstance.mint(owner, "puzzle/1")).wait()
-        )?.logs.find((e) => e.topics[0] === MINT_EVENT_TOPIC) as EventLog
+        )?.logs.find((e) => e.topics[0] === EventTopic.Mint) as EventLog
       ).args;
 
       expect(await puzzlePieceInstance.balanceOf(owner)).to.equal(2);
@@ -70,7 +66,7 @@ describe("PuzzlePiece", function () {
       const [, tokenId3] = (
         (
           await (await puzzlePieceInstance.mint(addr1, "puzzle/1")).wait()
-        )?.logs.find((e) => e.topics[0] === MINT_EVENT_TOPIC) as EventLog
+        )?.logs.find((e) => e.topics[0] === EventTopic.Mint) as EventLog
       ).args;
       expect(await puzzlePieceInstance.ownerOf(tokenId3)).to.equal(addr1);
     });
@@ -98,7 +94,7 @@ describe("PuzzlePiece", function () {
       );
       const txReceipt = await txResponse.wait();
       const transferEvent = txReceipt?.logs.find(
-        (e) => e.topics[0] === TRANSFER_EVENT_TOPIC
+        (e) => e.topics[0] === EventTopic.Transfer
       );
       const [, , tokenId] = (<EventLog>transferEvent).args;
       expect(tokenId).to.equal(1);
@@ -115,7 +111,7 @@ describe("PuzzlePiece", function () {
       );
       const txReceipt = await txResponse.wait();
       const transferEvent = txReceipt?.logs.find(
-        (e) => e.topics[0] === MINT_EVENT_TOPIC
+        (e) => e.topics[0] === EventTopic.Mint
       );
       const [, tokenId] = (<EventLog>transferEvent).args;
       expect(tokenId).to.equal(1);
