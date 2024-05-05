@@ -7,8 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
 import "hardhat/console.sol";
 
+// TODO: Emit Event
 contract Dal is ERC20, Ownable, ERC20Capped {
     address public minter;
+
     // mapping(address => uint) public balances;
 
     constructor(

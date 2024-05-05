@@ -24,7 +24,6 @@ describe("Dal", function () {
 
   describe("Mint Limit", function () {
     it("Should not mint over the cap", async function () {
-      console.log(await dalInstance.cap());
       const cap = await dalInstance.cap();
       await expect(
         dalInstance.mint(addr1.address, cap + BigInt(1))

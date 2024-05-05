@@ -1,7 +1,7 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "test": "npx hardhat test --typecheck",
+    "test": "npx hardhat test test/*.test.ts  --typecheck",
     "compile": "hardhat clean && hardhat compile"
   },
   "devDependencies": {
