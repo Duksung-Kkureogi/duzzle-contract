@@ -19,13 +19,13 @@ contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {
     constructor(
         string memory name_,
         string memory symbol_,
-        string memory baseURI_,
+        string memory metadataUri,
         address minter
     ) ERC721(name_, symbol_) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, minter);
 
-        setBaseURI(baseURI_);
+        setBaseURI(metadataUri);
     }
 
     function getBaseURI() public view returns (string memory) {
@@ -38,13 +38,10 @@ contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {
         baseURI = _baseURI;
     }
 
-    function mint(
-        address _to,
-        string memory _tokenURI
-    ) external onlyRole(MINTER_ROLE) returns (uint) {
+    function mint(address _to) external onlyRole(MINTER_ROLE) returns (uint) {
         uint tokenId = nextTokenId;
         _mint(_to, tokenId);
-        _setTokenURI(tokenId, _tokenURI);
+        _setTokenURI(tokenId, getBaseURI());
         nextTokenId++;
 
         emit Mint(_to, tokenId);
