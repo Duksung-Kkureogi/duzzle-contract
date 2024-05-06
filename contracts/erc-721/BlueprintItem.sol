@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "hardhat/console.sol";
 
-// 재료 아이템 NFT 의 메타데이터는 전부 동일
-contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {
+// 설계도면 아이템 NFT 는 token id 받아서 mint
+contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
     string baseURI;
-    uint private nextTokenId;
+    uint public nextTokenId;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER");
 
@@ -19,13 +19,13 @@ contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {
     constructor(
         string memory name_,
         string memory symbol_,
-        string memory metadataUri,
+        string memory baseURI_,
         address minter
     ) ERC721(name_, symbol_) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, minter);
 
-        setBaseURI(metadataUri);
+        setBaseURI(baseURI_);
     }
 
     function getBaseURI() public view returns (string memory) {
@@ -38,9 +38,13 @@ contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {
         baseURI = _baseURI;
     }
 
-    function mint(address _to) external onlyRole(MINTER_ROLE) returns (uint) {
+    function mint(
+        address _to,
+        string calldata _tokenURI
+    ) external onlyRole(MINTER_ROLE) returns (uint) {
         uint tokenId = nextTokenId;
         _mint(_to, tokenId);
+        _setTokenURI(tokenId, _tokenURI);
         nextTokenId++;
 
         emit Mint(_to, tokenId);
@@ -63,7 +67,7 @@ contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {
     function tokenURI(
         uint256 tokenId
     ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
-        return ERC721URIStorage.tokenURI(tokenId);
+        return super.tokenURI(tokenId);
     }
 
     function burn(address from, uint256 tokenId) external {
