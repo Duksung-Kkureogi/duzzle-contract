@@ -1,9 +1,9 @@
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
-import { EventLog, keccak256 } from "ethers";
+import { EventLog, keccak256, Log } from "ethers";
 import { ethers } from "hardhat";
-import { PuzzlePiece } from "./../typechain-types/contracts/erc-721/PuzzlePiece";
 import { EventTopic } from "./enum/test";
+import { PuzzlePiece } from "./../typechain-types/contracts/erc-721/PuzzlePiece";
 
 describe("PuzzlePiece", function () {
   let puzzlePieceInstance: PuzzlePiece;
@@ -140,6 +140,56 @@ describe("PuzzlePiece", function () {
       )
         .to.emit(puzzlePieceInstance, "Transfer")
         .withArgs(owner.address, addr1.address, 0);
+    });
+
+    it("Should fail if sender doesn't have enough tokens", async function () {
+      await expect(
+        puzzlePieceInstance
+          .connect(addr1)
+          .transferFrom(owner.address, addr1.address, 1)
+      ).to.be.revertedWithCustomError(
+        puzzlePieceInstance,
+        "ERC721NonexistentToken"
+      );
+
+      // Owner balance shouldn't have changed.
+      expect(await puzzlePieceInstance.balanceOf(owner.address)).to.equal(0);
+    });
+  });
+
+  describe("Burn", function () {
+    it("Is able to burn NFTs", async function () {
+      const [to, mintedTokenId] = (
+        (
+          await (await puzzlePieceInstance.mint(addr1.address, "")).wait()
+        )?.logs.find((e) => e.topics[0] === EventTopic.Mint) as EventLog
+      ).args;
+      const balance = await puzzlePieceInstance.balanceOf(addr1.address);
+
+      const [from, burnedTokenId] = (
+        (
+          await (
+            await puzzlePieceInstance.burn(addr1.address, mintedTokenId)
+          ).wait()
+        )?.logs.find((e) => e.topics[0] === EventTopic.Burn) as EventLog
+      ).args;
+
+      expect(to).to.equal(from);
+      expect(mintedTokenId).to.equal(burnedTokenId);
+      const finalBalance = await puzzlePieceInstance.balanceOf(addr1.address);
+      expect(finalBalance).to.equal(balance - BigInt(1));
+    });
+
+    it("Emits a Burn event when burning a NFT", async function () {
+      const [to, mintedTokenId] = (
+        (
+          await (await puzzlePieceInstance.mint(addr1.address, "")).wait()
+        )?.logs.find((e: Log) => e.topics[0] === EventTopic.Mint) as EventLog
+      ).args;
+
+      await expect(puzzlePieceInstance.burn(addr1.address, mintedTokenId))
+        .to.emit(puzzlePieceInstance, "Burn")
+        .withArgs(to, mintedTokenId);
     });
   });
 });
