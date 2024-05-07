@@ -4,6 +4,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../library/DuzzleLibrary.sol";
 import "../erc-721/MaterialItem.sol";
+import "../erc-20/Dal.sol";
 
 // using DuzzleLibrary for DuzzleLibrary.Season;
 // using Utils for Utils.Util;
@@ -11,7 +12,9 @@ import "../erc-721/MaterialItem.sol";
 contract PlayDuzzle is AccessControl {
     uint8 public thisSeasonId; // 현재 시즌 id
     uint8[] public seasonIds; // 지금까지의 시즌 id array
-    mapping(uint8 => DuzzleLibrary.Season) private seasons; // 시즌별 정보
+    mapping(uint8 => DuzzleLibrary.Season) public seasons; // 시즌별 정보
+    Dal public dalToken;
+    address public dalTokenAddress;
 
     event StartSeason(address[] itemAddresses);
     event SetZoneData(
@@ -21,9 +24,11 @@ contract PlayDuzzle is AccessControl {
         uint8[] requiredItemAmount
     );
 
-    constructor() {
+    constructor(uint capOfDalToken) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         thisSeasonId = 0;
+        dalToken = new Dal(capOfDalToken, address(this));
+        dalTokenAddress = address(dalToken);
     }
 
     function startSeason(

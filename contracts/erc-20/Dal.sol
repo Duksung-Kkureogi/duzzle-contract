@@ -37,7 +37,6 @@ contract Dal is ERC20, Ownable, ERC20Capped {
     }
 
     function burn(address account, uint256 value) public {
-        require(msg.sender == serviceContract);
         _burn(account, value);
         emit Burn(account, value);
     }
