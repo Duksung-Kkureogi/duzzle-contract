@@ -15,12 +15,17 @@ describe("Dal", function () {
   this.beforeEach(async function () {
     [owner, addr1, addr2] = await ethers.getSigners();
     const dalContract = await ethers.getContractFactory("Dal");
-    dalInstance = (await dalContract.deploy(1000)) as unknown as Dal;
+    const cap = 1000;
+
+    dalInstance = (await dalContract.deploy(
+      cap,
+      owner // service contract address
+    )) as unknown as Dal;
   });
 
   describe("Deployment", function () {
     it("Should set the right owner", async function () {
-      expect(await dalInstance.minter()).to.equal(owner.address);
+      expect(await dalInstance.owner()).to.equal(owner.address);
     });
   });
 
