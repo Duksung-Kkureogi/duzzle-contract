@@ -1,4 +1,3 @@
-import { PlayDuzzle } from "../typechain-types/contracts/service/PlayDuzzle";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ContractTransactionResponse, EventLog } from "ethers";
@@ -6,8 +5,11 @@ import { ethers } from "hardhat";
 import { EventTopic } from "./enum/test";
 import { Dal } from "../typechain-types/contracts/erc-20/Dal";
 import { DalAbi } from "./abi/dal";
+import { PlayDuzzle } from "../typechain-types/contracts/service/PlayDuzzle";
+import { FactoryOptions } from "hardhat/types";
 
 const DAL_TOKEN_CAP = 500_000;
+const BLUEPRINT_BASE_URI = "localhost:8000/v1/blueprint";
 const seasonData1 = {
   existedItemCollections: [],
   newItemNames: ["sand", "hammer"],
@@ -26,9 +28,24 @@ describe("PlayDuzzle Initialization", function () {
 
   this.beforeEach(async function () {
     [owner, addr1] = await ethers.getSigners();
-    const playDuzzleContract = await ethers.getContractFactory("PlayDuzzle");
+    const DuzzleLibrary = await ethers.getContractFactory("DuzzleLibrary");
+    const duzzleLibrary = await DuzzleLibrary.deploy();
+    const duzzleLibraryAddress = await duzzleLibrary.getAddress();
+
+    const Utils = await ethers.getContractFactory("Utils");
+    const utils = await Utils.deploy();
+    const utilsAddress = await utils.getAddress();
+    const options: FactoryOptions = {
+      libraries: {},
+    };
+
+    const playDuzzleContract = await ethers.getContractFactory(
+      "PlayDuzzle",
+      options
+    );
     playDuzzleInstance = (await playDuzzleContract.deploy(
-      DAL_TOKEN_CAP
+      DAL_TOKEN_CAP,
+      BLUEPRINT_BASE_URI
     )) as unknown as PlayDuzzle;
 
     const dalTokenAddress = await playDuzzleInstance.dalToken();

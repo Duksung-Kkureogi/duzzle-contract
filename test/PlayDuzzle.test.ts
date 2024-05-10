@@ -6,9 +6,15 @@ import { EventTopic } from "./enum/test";
 import { Dal } from "../typechain-types/contracts/erc-20/Dal";
 import { DalAbi } from "./abi/dal";
 import { PlayDuzzle } from "../typechain-types/contracts/service/PlayDuzzle";
+import { FactoryOptions } from "hardhat/types";
+import { MaterialItem } from "../typechain-types/contracts/erc-721/MaterialItem";
+import { MaterialAbi } from "./abi/material";
+import { BlueprintAbi } from "./abi/blueprint";
+import { BlueprintItem } from "./../typechain-types/contracts/erc-721/BlueprintItem";
 
 describe("PlayDuzzle", function () {
   const DAL_TOKEN_CAP = 500_000;
+  const BLUEPRINT_BASE_URI = "localhost:8000/v1/blueprint";
   const seasonData1 = {
     existedItemCollections: [],
     newItemNames: ["sand", "hammer"],
@@ -36,18 +42,40 @@ describe("PlayDuzzle", function () {
 
   let playDuzzleInstance: PlayDuzzle;
   let dalInstance: Dal;
+  let blueprintItemTokenAddress: string;
+  let bluePrintItemInstance: BlueprintItem;
   let owner: HardhatEthersSigner;
   let addr1: HardhatEthersSigner;
   let addr2: HardhatEthersSigner;
   let season1MaterialItemTokens: string[];
   let season2MaterialItemTokens: string[];
+  let materialItemInstances: MaterialItem[];
 
   // deploy play duzzle contract & set the first season data
   this.beforeEach(async function () {
     [owner, addr1, addr2] = await ethers.getSigners();
-    const playDuzzleContract = await ethers.getContractFactory("PlayDuzzle");
+    const DuzzleLibrary = await ethers.getContractFactory("DuzzleLibrary");
+    const duzzleLibrary = await DuzzleLibrary.deploy();
+    const duzzleLibraryAddress = await duzzleLibrary.getAddress();
+
+    const Utils = await ethers.getContractFactory("Utils");
+    const utils = await Utils.deploy();
+    const utilsAddress = await utils.getAddress();
+    const options: FactoryOptions = {
+      libraries: {
+        // DuzzleLibrary: duzzleLibraryAddress!,
+        // Utils: utilsAddress!,
+      },
+    };
+    const playDuzzleContract = await ethers.getContractFactory(
+      "PlayDuzzle",
+      options
+    );
     playDuzzleInstance = (await playDuzzleContract.deploy(
-      DAL_TOKEN_CAP
+      // duzzleLibraryAddress,
+      // utilsAddress,
+      DAL_TOKEN_CAP,
+      BLUEPRINT_BASE_URI
     )) as unknown as PlayDuzzle;
 
     const dalTokenAddress = await playDuzzleInstance.dalToken();
@@ -55,6 +83,12 @@ describe("PlayDuzzle", function () {
       DalAbi,
       dalTokenAddress
     )) as unknown as Dal;
+
+    blueprintItemTokenAddress = await playDuzzleInstance.blueprintItemToken();
+    bluePrintItemInstance = (await ethers.getContractAt(
+      BlueprintAbi,
+      blueprintItemTokenAddress
+    )) as unknown as BlueprintItem;
 
     const {
       existedItemCollections,
@@ -83,6 +117,17 @@ describe("PlayDuzzle", function () {
         (e) => e.topics[0] === EventTopic.StartSeason
       ) as EventLog
     ).args[0];
+
+    let _materialItemInstances: MaterialItem[] = [];
+    for (let i: number = 0; i < season1MaterialItemTokens.length; i++) {
+      _materialItemInstances.push(
+        (await ethers.getContractAt(
+          MaterialAbi,
+          season1MaterialItemTokens[i]
+        )) as unknown as MaterialItem
+      );
+    }
+    materialItemInstances = _materialItemInstances;
 
     // 20 개의 구역 데이터 세팅(zone별 퍼즐 조각 수, zone별 필요한 재료)
     const requiredItemsForMinting: string[][] = [
@@ -142,6 +187,7 @@ describe("PlayDuzzle", function () {
       );
     await Promise.allSettled(setZoneDatas);
   });
+
   it("Starting a Second Season with new item materials", async function () {
     const {
       existedItemCollections, // hammer
@@ -260,5 +306,73 @@ describe("PlayDuzzle", function () {
         args.getValue("requiredItemAmount")
       );
     }
+  });
+
+  describe("Get A Random Item NFT", function () {
+    it("To get a random item NFT, need 2 DAL tokens.", async function () {
+      await expect(
+        playDuzzleInstance.connect(addr1).getRandomItem()
+      ).to.be.revertedWith("not enough balacnce");
+    });
+
+    it("Emits a GetRandomItem event for newly minted random item nft", async function () {
+      await dalInstance.mint(addr1.address, 2);
+
+      await expect(playDuzzleInstance.connect(addr1).getRandomItem()).to.emit(
+        playDuzzleInstance,
+        "GetRandomItem"
+      );
+      // .withArgs("tokenAddress?", "tokenId?", addr1.address);
+    });
+
+    it("get random item nft by 2 DAL", async function () {
+      await dalInstance.mint(addr1.address, 2);
+      const dalBalance = await dalInstance.balanceOf(addr1.address);
+
+      // 재료 아이템 발행
+      const txResponse = await playDuzzleInstance
+        .connect(addr1)
+        .getRandomItem();
+      const txReceipt = await txResponse.wait();
+      const getRandomItemEvent = txReceipt?.logs.find(
+        (e) => e.topics[0] === EventTopic.GetRandomItem
+      );
+
+      // 2DAL 차감 확인
+      const finalDalBalance = await dalInstance.balanceOf(addr1.address);
+      expect(dalBalance - BigInt(2)).to.equal(finalDalBalance);
+
+      const [tokenAddress, tokenId, to] = (<EventLog>getRandomItemEvent).args;
+
+      // 발행된 NFT의 토큰 주소가 (재료 , 설계도면) 중에 하나인지
+      expect([...season1MaterialItemTokens, blueprintItemTokenAddress]).include(
+        tokenAddress
+      );
+      // addr1에게 발행되었는지
+      expect(to).to.equal(addr1.address);
+
+      // 발행된 아이템 종류에 따라 알맞은 토큰 컨트랙트의 balance 조회
+      if (tokenAddress === blueprintItemTokenAddress) {
+        const balance = await bluePrintItemInstance.balanceOf(addr1.address);
+        expect(balance).to.equal(1);
+      } else {
+        for (let i: number = 0; i < materialItemInstances.length; i++) {
+          if (tokenAddress === season1MaterialItemTokens[i]) {
+            const balance = await materialItemInstances[i].balanceOf(
+              addr1.address
+            );
+            expect(balance).to.equal(1);
+          }
+        }
+      }
+    });
+
+    // 각 재료 아이템이 total supply 만큼만 발행되는지. // TODO: 흠.. item 개수 최소로 해서 해보쟈. 그 아이템 하나라고 하고!!
+  });
+
+  describe("Get A Puzzle Piece NFT", function () {
+    it("get puzzle piece nft burning required items", async function () {
+      // await playDuzzleInstance.getRandomItem(addr1.address);
+    });
   });
 });
