@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
-import "hardhat/console.sol";
-
 contract Dal is ERC20, Ownable, ERC20Capped {
     event Mint(address to, uint value);
     event Burn(address from, uint value);

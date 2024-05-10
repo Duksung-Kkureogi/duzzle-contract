@@ -4,7 +4,6 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "hardhat/console.sol";
 
 contract PuzzlePiece is AccessControl, ERC721, ERC721URIStorage {
     string baseURI;

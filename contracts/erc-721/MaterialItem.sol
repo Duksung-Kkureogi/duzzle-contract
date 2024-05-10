@@ -4,7 +4,6 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "hardhat/console.sol";
 
 // 재료 아이템 NFT 의 메타데이터는 전부 동일
 contract MaterialItem is AccessControl, ERC721, ERC721URIStorage {

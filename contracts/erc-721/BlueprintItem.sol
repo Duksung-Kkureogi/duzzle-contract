@@ -4,7 +4,6 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "hardhat/console.sol";
 
 // 설계도면 아이템 NFT 는 token id 받아서 mint
 contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
@@ -17,11 +16,9 @@ contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
     event Burn(address from, uint tokenId);
 
     constructor(
-        string memory name_,
-        string memory symbol_,
         string memory baseURI_,
         address minter
-    ) ERC721(name_, symbol_) {
+    ) ERC721("Blueprint Item", "BP") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, minter);
 

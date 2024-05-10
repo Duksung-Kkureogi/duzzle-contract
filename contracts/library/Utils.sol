@@ -1,29 +1,21 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-
 library Utils {
     function getRandomNumber(
         uint256 from,
         uint256 to
-    ) public view returns (uint256) {
+    ) internal view returns (uint256) {
         uint256 seed = uint256(
-            keccak256(
-                abi.encodePacked(
-                    block.timestamp,
-                    block.prevrandao,
-                    (to + from * 17) - from
-                )
-            )
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao))
         );
+        uint256 seed2 = uint256(
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, seed))
+        );
+
         uint256 randomNumber = uint256(
             keccak256(
-                abi.encodePacked(
-                    block.timestamp,
-                    block.prevrandao,
-                    31 * (to + seed) - from
-                )
+                abi.encodePacked(block.timestamp, block.prevrandao, seed2)
             )
         );
 
