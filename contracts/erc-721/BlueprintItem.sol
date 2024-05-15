@@ -2,14 +2,18 @@
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-// 설계도면 아이템 NFT 는 token id 받아서 mint
-contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
-    string baseURI;
-    uint public nextTokenId;
-
+contract BlueprintItem is
+    AccessControl,
+    ERC721,
+    ERC721URIStorage,
+    ERC721Enumerable
+{
+    string private baseURI;
     bytes32 public constant MINTER_ROLE = keccak256("MINTER");
 
     event Mint(address to, uint tokenId);
@@ -21,6 +25,7 @@ contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
     ) ERC721("Blueprint Item", "BP") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(MINTER_ROLE, minter);
+        _grantRole(MINTER_ROLE, msg.sender);
 
         setBaseURI(baseURI_);
     }
@@ -37,12 +42,9 @@ contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
 
     function mint(
         address _to,
-        string calldata _tokenURI
+        uint tokenId
     ) external onlyRole(MINTER_ROLE) returns (uint) {
-        uint tokenId = nextTokenId;
-        _mint(_to, tokenId);
-        _setTokenURI(tokenId, _tokenURI);
-        nextTokenId++;
+        _safeMint(_to, tokenId);
 
         emit Mint(_to, tokenId);
 
@@ -67,6 +69,22 @@ contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
         return super.tokenURI(tokenId);
     }
 
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal virtual override(ERC721, ERC721Enumerable) returns (address) {
+        address previousOwner = super._update(to, tokenId, auth);
+        return previousOwner;
+    }
+
+    function _increaseBalance(
+        address account,
+        uint128 amount
+    ) internal virtual override(ERC721, ERC721Enumerable) {
+        super._increaseBalance(account, amount);
+    }
+
     function burn(address from, uint256 tokenId) external {
         emit Burn(from, tokenId);
 
@@ -78,9 +96,20 @@ contract BlueprintItem is AccessControl, ERC721, ERC721URIStorage {
     )
         public
         view
-        override(AccessControl, ERC721, ERC721URIStorage)
+        override(AccessControl, ERC721, ERC721Enumerable, ERC721URIStorage)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    // Get tokens of an owner
+    function tokensOfOwner(address _owner) public view returns (uint[] memory) {
+        uint tokenCount = balanceOf(_owner);
+        uint[] memory tokensId = new uint256[](tokenCount);
+
+        for (uint i = 0; i < tokenCount; i++) {
+            tokensId[i] = tokenOfOwnerByIndex(_owner, i);
+        }
+        return tokensId;
     }
 }

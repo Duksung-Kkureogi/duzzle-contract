@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
-import "hardhat/console.sol";
-
 library Utils {
     /**
      *
      * @param from 포함 O
      * @param to 포함 X
+     * (from) ~ (to - 1)
+     * 경우의 수: to - from
      */
     function getRandomNumber(
         uint256 from,
@@ -35,7 +35,6 @@ library Utils {
                 )
             )
         );
-
         return ((result % (to - from)) + from);
     }
 }

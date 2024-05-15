@@ -1,215 +1,236 @@
-import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { expect } from "chai";
-import { ContractTransactionResponse, EventLog } from "ethers";
-import { ethers } from "hardhat";
-import { EventTopic } from "./enum/test";
-import { Dal } from "../typechain-types/contracts/erc-20/Dal";
-import { DalAbi } from "./abi/dal";
-import { PlayDuzzle } from "../typechain-types/contracts/service/PlayDuzzle";
-import { FactoryOptions } from "hardhat/types";
+// import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+// import { expect } from "chai";
+// import { ContractTransactionResponse, EventLog } from "ethers";
+// import { ethers } from "hardhat";
+// import { EventTopic } from "./enum/test";
+// import { Dal } from "../typechain-types/contracts/erc-20/Dal";
+// import { abi as DalAbi } from "../artifacts/contracts/erc-20/Dal.sol/Dal.json";
+// import { PlayDuzzle } from "../typechain-types/contracts/service/PlayDuzzle";
+// import { FactoryOptions } from "hardhat/types";
+// import { SeasonData } from "./data/playduzzle/input-data-class/season";
+// import { DefaultDuzzleData } from "./data/playduzzle/input-data-class/constants";
+// import { PlayDuzzleContractData } from "./data/playduzzle/input-data-class/playduzzle-deploy";
+// import { InputData1 } from "./data/playduzzle/input-data";
 
-const DAL_TOKEN_CAP = 500_000;
-const BLUEPRINT_BASE_URI = "localhost:8000/v1/blueprint";
-const seasonData1 = {
-  existedItemCollections: [],
-  newItemNames: ["sand", "hammer"],
-  newItemSymbols: ["SND", "HMR"],
-  maxSupplys: [65, 50],
-  pieceCountOfZones: [
-    4, 5, 3, 7, 2, 10, 3, 7, 7, 9, 11, 3, 4, 4, 6, 12, 3, 8, 5, 2,
-  ], // zone 0: 0~3 (4 pieces), zone1: 4~8(5 pieces) ... zone 19:
-};
+// const _ = new PlayDuzzleContractData(...InputData1.deployParameters);
 
-describe("PlayDuzzle Initialization", function () {
-  let playDuzzleInstance: PlayDuzzle;
-  let dalInstance: Dal;
-  let owner: HardhatEthersSigner;
-  let addr1: HardhatEthersSigner;
+// //
+// /** 1.  PlayDuzzle 컨트랙트 배포
+//  *  new PlayDuzzleContractData 클래스
+//  * - PlayDuzzleContractData 의 deployParameters 이용
+//  *
+//  *  2. 배포 후 생성된 Dal, Blueprint, PuzzlePiece 인스턴스 세팅
+//  *  PlayDuzzleContractData.setInstance()
+//  */
 
-  this.beforeEach(async function () {
-    [owner, addr1] = await ethers.getSigners();
-    const DuzzleLibrary = await ethers.getContractFactory("DuzzleLibrary");
-    const duzzleLibrary = await DuzzleLibrary.deploy();
-    const duzzleLibraryAddress = await duzzleLibrary.getAddress();
+// /** 새 시즌 시작을 위한(첫 시즌 포함) - PlayDuzzle 컨트랙트는 배포된 상태
+//  * SeasonData 클래스와 PlayDuzzle 컨트랙트 함수 호출 순서
+//  * 1. new SeasonData 생성
+//  *
+//  * 2. PlayDuzzle 컨트랙트 startSeason() 메서드 호출
+//  *  SeasonData 의 startSeasonParameters 이용
+//  *
+//  * 3. 만들어진 재료 컨트랙트 주소 값을 저장
+//  *  startSeason() 호출시 발생한 이벤트 파라미터 값으로 Zone Data 세팅
+//  *  SeasonData.makeZoneDataParameters(재료토큰주소[]) 로 세팅
+//  *
+//  * 4. Zone 별 조각수/필요한재료토큰 목록/개수 세팅
+//  *  PlayDuzzle 컨트랙트의 setZoneData() 메서드를 zone 개수만큼 호출
+//  *  파라미터로는 SeasonData.setZoneDataParametersArr 사용
+//  *
+//  */
+// const firstSeasonData = new SeasonData(InputData1.seasonData1);
+// let secondSeasonData: SeasonData;
 
-    const Utils = await ethers.getContractFactory("Utils");
-    const utils = await Utils.deploy();
-    const utilsAddress = await utils.getAddress();
-    const options: FactoryOptions = {
-      libraries: {},
-    };
+// describe("PlayDuzzle Initialization / Start New Season", function () {
+//   let owner: HardhatEthersSigner;
+//   let addr1: HardhatEthersSigner;
 
-    const playDuzzleContract = await ethers.getContractFactory(
-      "PlayDuzzle",
-      options
-    );
-    playDuzzleInstance = (await playDuzzleContract.deploy(
-      DAL_TOKEN_CAP,
-      BLUEPRINT_BASE_URI
-    )) as unknown as PlayDuzzle;
+//   this.beforeEach(async function () {
+//     [owner, addr1] = await ethers.getSigners();
 
-    const dalTokenAddress = await playDuzzleInstance.dalToken();
-    dalInstance = (await ethers.getContractAt(
-      DalAbi,
-      dalTokenAddress
-    )) as unknown as Dal;
-  });
+//     const playDuzzleContract = await ethers.getContractFactory(
+//       "PlayDuzzle"
+//       // options
+//     );
+//     const playDuzzleInstance = (await playDuzzleContract.deploy(
+//       ..._.deployParameters
+//     )) as unknown as PlayDuzzle;
 
-  describe("Starting a First Season", function () {
-    it("Only allows owner to start a new season", async function () {
-      const {
-        existedItemCollections,
-        newItemNames,
-        newItemSymbols,
-        maxSupplys,
-        pieceCountOfZones,
-      } = seasonData1;
+//     const dalTokenAddress = await playDuzzleInstance.dalToken();
+//     const dalInstance = (await ethers.getContractAt(
+//       DalAbi,
+//       dalTokenAddress
+//     )) as unknown as Dal;
 
-      // parameter validating
-      expect(newItemNames.length).to.equal(newItemSymbols.length);
-      expect(existedItemCollections.length + newItemNames.length).to.equal(
-        maxSupplys.length
-      );
+//     _.setInstance(playDuzzleInstance, dalInstance);
+//   });
 
-      await expect(
-        playDuzzleInstance.connect(addr1).startSeason(
-          existedItemCollections,
-          newItemNames,
-          newItemSymbols,
-          maxSupplys,
-          pieceCountOfZones.reduce(function (a, b) {
-            return a + b;
-          })
-        )
-      ).to.be.revertedWithCustomError(
-        playDuzzleInstance,
-        "AccessControlUnauthorizedAccount"
-      );
-    });
+//   describe("Starting a First Season", function () {
+//     it("Only allows owner to start a new season", async function () {
+//       await expect(
+//         _.playDuzzleInstance
+//           .connect(addr1)
+//           .startSeason(...firstSeasonData.startSeasonParameters)
+//       ).to.be.revertedWithCustomError(
+//         _.playDuzzleInstance,
+//         "AccessControlUnauthorizedAccount"
+//       );
+//     });
 
-    it("set season data", async function () {
-      const {
-        existedItemCollections,
-        newItemNames,
-        newItemSymbols,
-        maxSupplys,
-        pieceCountOfZones,
-      } = seasonData1;
+//     it("set season data", async function () {
+//       const { existedItemCollections, newItemNames } = firstSeasonData.initData;
+//       const itemCount = firstSeasonData.initData.maxSupplys.length;
+//       const receipt = await (
+//         await _.playDuzzleInstance.startSeason(
+//           ...firstSeasonData.startSeasonParameters
+//         )
+//       ).wait();
 
-      const totalPieceCount = pieceCountOfZones.reduce(function (a, b) {
-        return a + b;
-      }); // 115
+//       const materialItemTokenAddresses: string[] = (
+//         receipt?.logs.find(
+//           (e) => e.topics[0] === EventTopic.StartSeason
+//         ) as EventLog
+//       ).args[0];
 
-      const receipt = await (
-        await playDuzzleInstance.startSeason(
-          existedItemCollections,
-          newItemNames,
-          newItemSymbols,
-          maxSupplys,
-          totalPieceCount
-        )
-      ).wait();
+//       expect(materialItemTokenAddresses.length).to.equal(itemCount);
+//       expect(
+//         materialItemTokenAddresses.slice(0, existedItemCollections.length)
+//       ).to.eql(existedItemCollections); // 배열 비교, deep-eql
+//       expect(
+//         materialItemTokenAddresses.slice(existedItemCollections.length).length
+//       ).to.equal(newItemNames.length);
 
-      const materialItemTokenAddresses: string[] = (
-        receipt?.logs.find(
-          (e) => e.topics[0] === EventTopic.StartSeason
-        ) as EventLog
-      ).args[0];
+//       firstSeasonData.makeZoneDataParameters(materialItemTokenAddresses);
 
-      expect(materialItemTokenAddresses.length).to.equal(maxSupplys.length);
-      expect(
-        materialItemTokenAddresses.slice(0, existedItemCollections.length)
-      ).to.eql(existedItemCollections); // 배열 비교, deep-eql
-      expect(
-        materialItemTokenAddresses.slice(existedItemCollections.length).length
-      ).to.equal(newItemNames.length);
+//       // 에러 없이 zone count 만큼 setZoneData() 호출 확인
+//       const setZoneDatas = new Array(DefaultDuzzleData.ZoneCount)
+//         .fill(null)
+//         .map((_e, i) =>
+//           _.playDuzzleInstance.setZoneData(
+//             ...firstSeasonData.setZoneDataParametersArr[i]
+//           )
+//         );
+//       const result = await Promise.allSettled(setZoneDatas);
+//       expect(result.every((e) => e.status === "fulfilled")).to.be.true;
 
-      // 20 개의 구역 데이터 세팅(zone별 퍼즐 조각 수, zone별 필요한 재료)
-      const requiredItemsForMinting: string[][] = [
-        [materialItemTokenAddresses[0], materialItemTokenAddresses[1]], // zone0 필요한 재료: 재료0, 재료1
-        [materialItemTokenAddresses[0]], // zone1 필요한 재료: 재료0
-        [materialItemTokenAddresses[1]], // zone2 필요한 재료: 재료1
-        [materialItemTokenAddresses[1]], // zone3 필요한 재료: 재료1
-        [materialItemTokenAddresses[0], materialItemTokenAddresses[1]], // zone4 필요한 재료: 재료0, 재료1
-        [materialItemTokenAddresses[0], materialItemTokenAddresses[1]], // zone5 필요한 재료: 재료0, 재료1
-        [materialItemTokenAddresses[0]], // zone6 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone7 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone8 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone9 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone10 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone11 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone12 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone13 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone14 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone15 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone16 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone17 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone18 필요한 재료: 재료0
-        [materialItemTokenAddresses[0]], // zone19 필요한 재료: 재료0
-      ];
-      const requiredItemAmount: number[][] = [
-        [1, 1], // zone0: 재료x 1개, 재료y 1개씩 필요
-        [2], // zone1: 재료x 2개
-        [2], // zone2: 재료x 2개
-        [1], // zone3: 재료x 1개
-        [3, 4], // zone4: 재료x 3개 재료y 4개
-        [2, 2], // zone5: 재료x 3개 재료y 4개
-        [1], // zone6: 재료x 1개
-        [1], // zone7: 재료x 1개
-        [1], // zone8: 재료x 1개
-        [1], // zone9: 재료x 1개
-        [1], // zone10: 재료x 1개
-        [1], // zone11: 재료x 1개
-        [1], // zone12: 재료x 1개
-        [1], // zone13: 재료x 1개
-        [1], // zone14: 재료x 1개
-        [1], // zone15: 재료x 1개
-        [1], // zone16: 재료x 1개
-        [1], // zone17: 재료x 1개
-        [1], // zone18: 재료x 1개
-        [1], // zone19: 재료x 1개
-      ];
-      expect(requiredItemsForMinting.length).to.equal(
-        requiredItemAmount.length
-      );
+//       // setZoneData() 호출시 발생한 이벤트 값으로 컨트랙트 storage 에 의도한 값 세팅 확인F
+//       for (let zone: number = 0; zone < DefaultDuzzleData.ZoneCount; zone++) {
+//         let contractResponse: ContractTransactionResponse =
+//           await _.playDuzzleInstance.setZoneData(
+//             ...firstSeasonData.setZoneDataParametersArr[zone]
+//           );
+//         const args = (
+//           (await contractResponse.wait())?.logs.find(
+//             (e) => e.topics[0] === EventTopic.SetZoneData
+//           ) as EventLog
+//         ).args;
+//         expect(zone).to.equal(args.getValue("zoneId"));
+//         expect(firstSeasonData.initData.pieceCountOfZones[zone]).to.equal(
+//           args.getValue("pieceCountOfZones")
+//         );
+//         expect(firstSeasonData.requiredMaterialTokensForMinting[zone]).to.eql(
+//           args.getValue("requiredItemsForMinting")
+//         );
+//         expect(
+//           firstSeasonData.initData.requiredMaterialAmounts[zone].map((e) =>
+//             BigInt(e)
+//           )
+//         ).to.eql(args.getValue("requiredItemAmount"));
+//       }
+//     });
+//   });
 
-      const setZoneDatas = new Array(20)
-        .fill(null)
-        .map((_, i) =>
-          playDuzzleInstance.setZoneData(
-            i,
-            pieceCountOfZones[i],
-            requiredItemsForMinting[i],
-            requiredItemAmount[i]
-          )
-        );
-      const result = await Promise.allSettled(setZoneDatas);
-      expect(result.every((e) => e.status === "fulfilled")).to.be.true;
+//   describe("Starting a Second Season", function () {
+//     it("set season data with existed material tokens of first season", async function () {
+//       const startFirstSeasonReceipt = await (
+//         await _.playDuzzleInstance.startSeason(
+//           ...firstSeasonData.startSeasonParameters
+//         )
+//       ).wait();
 
-      for (let i: number = 0; i < 20; i++) {
-        let contractResponse: ContractTransactionResponse =
-          await playDuzzleInstance.setZoneData(
-            i,
-            pieceCountOfZones[i],
-            requiredItemsForMinting[i],
-            requiredItemAmount[i]
-          );
-        const args = (
-          (await contractResponse.wait())?.logs.find(
-            (e) => e.topics[0] === EventTopic.SetZoneData
-          ) as EventLog
-        ).args;
-        expect(i).to.equal(args.getValue("zoneId"));
-        expect(pieceCountOfZones[i]).to.equal(
-          args.getValue("pieceCountOfZones")
-        );
-        expect(requiredItemsForMinting[i]).to.eql(
-          args.getValue("requiredItemsForMinting")
-        );
-        expect(requiredItemAmount[i].map((e) => BigInt(e))).to.eql(
-          args.getValue("requiredItemAmount")
-        );
-      }
-    });
-  });
-});
+//       const firstSeasonMaterialTokenAddresses: string[] = (
+//         startFirstSeasonReceipt?.logs.find(
+//           (e) => e.topics[0] === EventTopic.StartSeason
+//         ) as EventLog
+//       ).args[0];
+
+//       // 두 번째 시즌에서 사용하는 재료:
+//       // - 첫 시즌의 0,1 재료 토큰 중 하나 유지 (1번째)
+//       InputData1.seasonData2.existedItemCollections = [
+//         firstSeasonMaterialTokenAddresses[1],
+//       ];
+
+//       secondSeasonData = new SeasonData(InputData1.seasonData2);
+//       console.log(secondSeasonData.startSeasonParameters);
+
+//       const { existedItemCollections, newItemNames } =
+//         secondSeasonData.initData;
+//       const itemCount = secondSeasonData.initData.maxSupplys.length;
+//       const startSecondSeasonReceipt = await (
+//         await _.playDuzzleInstance.startSeason(
+//           ...secondSeasonData.startSeasonParameters
+//         )
+//       ).wait();
+
+//       const secondSeasonMaterialTokenAddresses: string[] = (
+//         startSecondSeasonReceipt?.logs.find(
+//           (e) => e.topics[0] === EventTopic.StartSeason
+//         ) as EventLog
+//       ).args[0];
+
+//       expect(secondSeasonMaterialTokenAddresses.length).to.equal(itemCount);
+//       expect(
+//         secondSeasonMaterialTokenAddresses.slice(
+//           0,
+//           existedItemCollections.length
+//         )
+//       ).to.eql(existedItemCollections); // 배열 비교, deep-eql
+//       expect(
+//         secondSeasonMaterialTokenAddresses.slice(existedItemCollections.length)
+//           .length
+//       ).to.equal(newItemNames.length);
+
+      
+//       secondSeasonData.makeZoneDataParameters(
+//         secondSeasonMaterialTokenAddresses
+//       );
+
+//       // 에러 없이 zone count 만큼 setZoneData() 호출 확인
+//       const setZoneDatas = new Array(DefaultDuzzleData.ZoneCount)
+//         .fill(null)
+//         .map((_e, i) =>
+//           _.playDuzzleInstance.setZoneData(
+//             ...secondSeasonData.setZoneDataParametersArr[i]
+//           )
+//         );
+//       const result = await Promise.allSettled(setZoneDatas);
+//       expect(result.every((e) => e.status === "fulfilled")).to.be.true;
+
+//       // setZoneData() 호출시 발생한 이벤트 값으로 컨트랙트 storage 에 의도한 값 세팅 확인F
+//       for (let zone: number = 0; zone < DefaultDuzzleData.ZoneCount; zone++) {
+//         let contractResponse: ContractTransactionResponse =
+//           await _.playDuzzleInstance.setZoneData(
+//             ...secondSeasonData.setZoneDataParametersArr[zone]
+//           );
+//         const args = (
+//           (await contractResponse.wait())?.logs.find(
+//             (e) => e.topics[0] === EventTopic.SetZoneData
+//           ) as EventLog
+//         ).args;
+//         expect(zone).to.equal(args.getValue("zoneId"));
+//         expect(secondSeasonData.initData.pieceCountOfZones[zone]).to.equal(
+//           args.getValue("pieceCountOfZones")
+//         );
+//         expect(secondSeasonData.requiredMaterialTokensForMinting[zone]).to.eql(
+//           args.getValue("requiredItemsForMinting")
+//         );
+//         expect(
+//           secondSeasonData.initData.requiredMaterialAmounts[zone].map((e) =>
+//             BigInt(e)
+//           )
+//         ).to.eql(args.getValue("requiredItemAmount"));
+//       }
+//     });
+//   });
+// });

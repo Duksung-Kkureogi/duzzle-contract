@@ -12,12 +12,9 @@ contract Dal is ERC20, Ownable, ERC20Capped {
 
     constructor(
         uint cap,
-        address _serviceContract
-    )
-        ERC20("Dal", "DAL")
-        Ownable(tx.origin)
-        ERC20Capped(cap * (10 ** decimals()))
-    {
+        address _serviceContract,
+        address owner
+    ) ERC20("Dal", "DAL") Ownable(owner) ERC20Capped(cap * (10 ** decimals())) {
         serviceContract = _serviceContract;
     }
 

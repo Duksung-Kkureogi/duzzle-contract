@@ -2,9 +2,9 @@ import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { Dal } from "../typechain-types/contracts/erc-20/Dal";
 import { EventLog } from "ethers";
 import { EventTopic } from "./enum/test";
+import { Dal } from "../typechain-types/contracts/erc-20/Dal";
 
 describe("Dal", function () {
   let dalInstance: Dal;
@@ -19,7 +19,8 @@ describe("Dal", function () {
 
     dalInstance = (await dalContract.deploy(
       cap,
-      owner // service contract address
+      owner, // service contract address,
+      owner
     )) as unknown as Dal;
   });
 
