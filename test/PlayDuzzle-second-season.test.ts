@@ -14,7 +14,7 @@ import { abi as PuzzlePieceAbi } from "../artifacts/contracts/erc-721/PuzzlePiec
 import { BlueprintItem } from "./../typechain-types/contracts/erc-721/BlueprintItem";
 import { PuzzlePiece } from "../typechain-types/contracts/erc-721/PuzzlePiece";
 import { PlayDuzzleContractData } from "./data/playduzzle/input-data-class/playduzzle-deploy";
-import { InputData1 } from "./data/playduzzle/input-data";
+import { InputData1 } from "./data/playduzzle/input-data-1";
 import { SeasonData } from "./data/playduzzle/input-data-class/season";
 import { DefaultDuzzleData } from "./data/playduzzle/input-data-class/constants";
 

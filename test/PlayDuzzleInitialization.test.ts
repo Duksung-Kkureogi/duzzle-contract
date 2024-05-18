@@ -10,7 +10,7 @@ import { FactoryOptions } from "hardhat/types";
 import { SeasonData } from "./data/playduzzle/input-data-class/season";
 import { DefaultDuzzleData } from "./data/playduzzle/input-data-class/constants";
 import { PlayDuzzleContractData } from "./data/playduzzle/input-data-class/playduzzle-deploy";
-import { InputData1 } from "./data/playduzzle/input-data";
+import { InputData1 } from "./data/playduzzle/input-data-1";
 
 const _ = new PlayDuzzleContractData(...InputData1.deployParameters);
 

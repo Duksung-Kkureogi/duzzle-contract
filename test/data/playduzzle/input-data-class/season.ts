@@ -81,7 +81,6 @@ export class SeasonData {
       this.initData;
 
     this.materialItemTokens = materialItemTokenAddresses;
-    // console.log("make zone paraeters 로 넘어가는: ", materialItemTokenAddresses);
     this.requiredMaterialTokensForMinting =
       requiredMaterialIndexesForMinting.map((materialIndexes: number[]) =>
         materialIndexes.map((i) => this.materialItemTokens![i])
