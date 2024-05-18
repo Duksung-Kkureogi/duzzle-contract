@@ -326,11 +326,21 @@ describe("PlayDuzzle", function () {
       await _.playDuzzleInstance!.connect(addr1).unlockPuzzlePiece(21); // zone 5(21~30) -> 재료[0] 2개, 재료[1] 2개
       await _.playDuzzleInstance!.connect(addr1).unlockPuzzlePiece(48); // zone 9(48~56) -> 재료[0] 1개
 
-      expect(await _.puzzlePieceInstance!.ownerOf(4)).to.equal(addr1.address);
-      expect(await _.puzzlePieceInstance!.ownerOf(11)).to.equal(addr1.address);
-      expect(await _.puzzlePieceInstance!.ownerOf(12)).to.equal(addr1.address);
-      expect(await _.puzzlePieceInstance!.ownerOf(21)).to.equal(addr1.address);
-      expect(await _.puzzlePieceInstance!.ownerOf(48)).to.equal(addr1.address);
+      expect(await _.puzzlePieceInstance!.ownerOf(4 + 1)).to.equal(
+        addr1.address
+      );
+      expect(await _.puzzlePieceInstance!.ownerOf(11 + 1)).to.equal(
+        addr1.address
+      );
+      expect(await _.puzzlePieceInstance!.ownerOf(12 + 1)).to.equal(
+        addr1.address
+      );
+      expect(await _.puzzlePieceInstance!.ownerOf(21 + 1)).to.equal(
+        addr1.address
+      );
+      expect(await _.puzzlePieceInstance!.ownerOf(48 + 1)).to.equal(
+        addr1.address
+      );
     });
 
     // TODO: getRandomItem() 메서드 N 번 호출 -> 얻은 아이템들로 unlock 가능한 zone 잠금해제 되는지 확인
@@ -376,11 +386,11 @@ describe("PlayDuzzle", function () {
         await _.playDuzzleInstance!.getItemMintedCountsBySeasonId(0);
 
       if (itemTokenAddress === (await _.bluepirntInstance?.getAddress())) {
-        const blueprintId =
-          mintEvent?.index! - Number(await _.playDuzzleInstance?.offset());
-
-        // TODO: 간헐적 실패
-        expect(mintedBlueprintFinal[blueprintId]).to.be.true;
+        const mintedBlueprintTokenId =
+          Number((await _.bluepirntInstance!.tokensOfOwner(addr1))[0]!) -
+          Number(await _.playDuzzleInstance?.offset());
+        const blueprintIndex = mintedBlueprintTokenId - 1;
+        expect(mintedBlueprintFinal[blueprintIndex]).to.be.true;
       } else {
         const materialItemIdx = materialItemTokens.findIndex(
           (e) => e === itemTokenAddress

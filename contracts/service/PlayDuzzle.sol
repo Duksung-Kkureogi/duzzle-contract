@@ -321,12 +321,13 @@ contract PlayDuzzle is AccessControl {
     /**
      *
      * @param pieceId 0 ~ totalPieceCount
+     * pieceId 0부터 시작
      */
     function unlockPuzzlePiece(uint pieceId) public {
         // pieceId 가 해당하는 zone 파악
         // zone 별로 필요한 재료 아이템 다름
         uint8 zoneId = 0;
-        uint24 zoneStart = 1;
+        uint24 zoneStart = 0;
         uint24 zoneEnd = 0;
         while (true) {
             zoneEnd = zoneEnd + seasons[thisSeasonId].pieceCountOfZones[zoneId];
@@ -391,7 +392,7 @@ contract PlayDuzzle is AccessControl {
 
         // tokenId 얻기
         // tokenId = (지난 시즌의 마지막 PuzzlePiece 토큰아이디= offset)  + (pieceId)
-        puzzlePieceToken.mint(msg.sender, pieceId + offset);
+        puzzlePieceToken.mint(msg.sender, pieceId + 1 + offset);
         seasons[thisSeasonId].mintedCount++;
     }
 
