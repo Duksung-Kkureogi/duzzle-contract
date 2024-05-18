@@ -76,7 +76,7 @@ export const InputData1: {
     newItemBaseUris: ["localhost:8000/v1/redbrick", "localhost:8000/v1/glass"],
     maxSupplys: [30, 40, 20],
     pieceCountOfZones: [
-      1, 2, 1, 2, 2, 6, 3, 10, 7, 9, 11, 3, 4, 4, 7, 12, 3, 10, 9, 3,
+      2, 1, 3, 1, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
     ],
     requiredMaterialIndexesForMinting: [
       [0, 1, 2], // zone0 필요한 재료: 재료0, 재료1, 재료2
