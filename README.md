@@ -1,4 +1,25 @@
-#### contract PlayDuzzle
+
+
+## 컨트랙트 목록
+   - _**ERC-721**_: 퍼즐조각 NFT(`PuzzlePiece`), 재료 아이템 NFT(`MaterialItem`), 설계도면 아이템 NFT(`BlueprintItem`)
+   - _**ERC-20**_: `Dal` (앱 내 재화로 사용) - 퀘스트 보상
+   - __**service**__: `PlayDuzzle`
+
+
+## 테스트 케이스
+
+
+
+## contract PlayDuzzle
+– 랜덤 아이템 뽑기
+
+<img width="478" alt="image" src="https://github.com/user-attachments/assets/d500e093-037f-46cc-85ac-146ee2945af0">
+
+#
+- 퍼즐 조각 잠금해제
+
+<img width="560" alt="image" src="https://github.com/user-attachments/assets/62c5a22e-8527-49a7-a410-89ec3c9b3077">
+
 - function
   - 시즌 시작
     - 시즌 시작할때 재료 관련해서 파라미터를 어떻게 넘겨야하는지
