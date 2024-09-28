@@ -324,76 +324,79 @@ contract PlayDuzzle is AccessControl {
      * pieceId 0부터 시작
      */
     function unlockPuzzlePiece(uint pieceId) public {
-        // pieceId 가 해당하는 zone 파악
-        // zone 별로 필요한 재료 아이템 다름
+        require(
+            pieceId < seasons[thisSeasonId].totalPieceCount,
+            "Invalid pieceId"
+        );
+
         uint8 zoneId = 0;
         uint24 zoneStart = 0;
         uint24 zoneEnd = 0;
-        while (true) {
-            zoneEnd = zoneEnd + seasons[thisSeasonId].pieceCountOfZones[zoneId];
+        for (uint8 i = 0; i < 20; i++) {
+            zoneEnd = zoneEnd + seasons[thisSeasonId].pieceCountOfZones[i];
             if (pieceId >= zoneStart && pieceId < zoneEnd) {
+                zoneId = i;
                 break;
             }
-
-            zoneStart =
-                zoneStart +
-                seasons[thisSeasonId].pieceCountOfZones[zoneId];
-            zoneId++;
+            zoneStart = zoneEnd;
         }
 
-        // 필요한 아이템 있는지 확인
-        uint requireditemTotalCount = seasons[thisSeasonId]
+        // 재료 아이템 확인 및 소각
+        uint requiredItemTotalCount = seasons[thisSeasonId]
             .requiredItemsForMinting[zoneId]
             .length;
-
-        // // 1. 재료 아이템 확인
-        for (uint8 i = 0; i < requireditemTotalCount; i++) {
+        for (uint8 i = 0; i < requiredItemTotalCount; i++) {
             MaterialItem instance = MaterialItem(
                 seasons[thisSeasonId].requiredItemsForMinting[zoneId][i]
             );
-
             uint8 itemAmount = seasons[thisSeasonId].requiredItemAmount[zoneId][
                 i
             ];
             uint[] memory tokens = instance.tokensOfOwner(msg.sender);
 
-            if (tokens.length < itemAmount) {
-                revert NotEnoughBalanceOfMaterialItem();
-            }
+            require(
+                tokens.length >= itemAmount,
+                "NotEnoughBalanceOfMaterialItem"
+            );
 
             for (uint j = 0; j < itemAmount; j++) {
                 instance.burn(msg.sender, tokens[j]);
             }
         }
-        // 2. 설계도면 아이템 확인
+
+        // 해당 구역의 설계도면 확인
         // 유저가 가지고 있는 blueprintItem token id 가.
         // zoneStart ~ zoneEnd 안에 있는지 (?)
-        // 아아 아니면 zoneStart~zoneEnd 까지 의 설계도면 주에 하나를 유저가 가지고 있는지!! 글고 그중하나 민트.
-        uint[] memory bluprintsOfUser = blueprintItemToken.tokensOfOwner(
+        uint[] memory blueprintsOfUser = blueprintItemToken.tokensOfOwner(
             msg.sender
         );
-
         uint blueprintId;
-        bool hasBlueprint;
-        for (uint i = 0; i < bluprintsOfUser.length; i++) {
+        bool hasBlueprint = false;
+        for (uint i = 0; i < blueprintsOfUser.length; i++) {
             if (
-                bluprintsOfUser[i] >= offset + zoneStart &&
-                bluprintsOfUser[i] < offset + zoneEnd
+                blueprintsOfUser[i] > offset &&
+                blueprintsOfUser[i] <=
+                offset + seasons[thisSeasonId].totalPieceCount
             ) {
-                hasBlueprint = true;
-                blueprintId = bluprintsOfUser[i];
-                i = i + bluprintsOfUser.length; // if 문 종료
+                uint adjustedBlueprintId = blueprintsOfUser[i] - offset;
+                if (
+                    adjustedBlueprintId > zoneStart &&
+                    adjustedBlueprintId <= zoneEnd
+                ) {
+                    hasBlueprint = true;
+                    blueprintId = blueprintsOfUser[i];
+                    break;
+                }
             }
         }
-        if (!hasBlueprint) {
-            revert NotEnoughBalanceOfBlueprintItem();
-        }
+        require(hasBlueprint, "NotEnoughBalanceOfBlueprintItem");
+
         blueprintItemToken.burn(msg.sender, blueprintId);
 
-        // tokenId 얻기
-        // tokenId = (지난 시즌의 마지막 PuzzlePiece 토큰아이디= offset)  + (pieceId)
         puzzlePieceToken.mint(msg.sender, pieceId + 1 + offset);
         seasons[thisSeasonId].mintedCount++;
+
+        emit UnlockPuzzlePiece(zoneId, pieceId + 1 + offset, msg.sender);
     }
 
     function getAllSeasonIds()
