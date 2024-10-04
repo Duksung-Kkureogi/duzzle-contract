@@ -25,6 +25,7 @@ const config: HardhatUserConfig = {
       url: process.env.RPC_AMOY,
       chainId: parseInt(process.env.CHAIN_ID_AMOY!),
       accounts: [process.env.OWNER_PK_AMOY!],
+      gasPrice: 25000000000,
     },
   },
 };
