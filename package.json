@@ -2,7 +2,7 @@
   "name": "hardhat-project",
   "scripts": {
     "test": "npx hardhat test test/*.test.ts  --typecheck",
-    "compile": "hardhat clean && hardhat compile"
+    "compile": "hardhat clean && hardhat compile --force"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
