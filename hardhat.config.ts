@@ -1,4 +1,7 @@
 import "@nomicfoundation/hardhat-toolbox";
+import '@nomicfoundation/hardhat-ignition';
+import "@nomicfoundation/hardhat-ignition-ethers";
+
 import { getConfig } from "./config";
 import { extendEnvironment, HardhatUserConfig } from "hardhat/config";
 import "dotenv/config";
@@ -25,7 +28,10 @@ const config: HardhatUserConfig = {
       url: process.env.RPC_AMOY,
       chainId: parseInt(process.env.CHAIN_ID_AMOY!),
       accounts: [process.env.OWNER_PK_AMOY!],
-      gasPrice: 25000000000,
+      // gasPrice: 40 ,  // 40 Gwei
+//       gas: 5000000,
+//       // gas 는 5000000 일케 넉넉히 넣고
+// // gasPrice는 한 30gwei정도?
     },
   },
 };
