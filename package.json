@@ -3,7 +3,7 @@
   "scripts": {
     "test": "npx hardhat test test/*.test.ts  --typecheck",
     "compile": "hardhat clean && hardhat compile --force",
-    "deploy:amoy": "npx hardhat ignition deploy ignition/modules/PlayDuzzle.ts --network amoy",
+    "deploy:amoy": "npx hardhat ignition deploy ignition/modules/PlayDuzzle.ts --network amoy --reset",
     "console:amoy": "npx hardhat console --network amoy"
   },
   "devDependencies": {
