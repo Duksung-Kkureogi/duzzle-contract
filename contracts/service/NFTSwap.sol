@@ -3,8 +3,15 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract NFTSwap is ReentrancyGuard {
+contract NFTSwap is ReentrancyGuard, AccessControl {
+    bytes32 public constant BACKEND_ROLE = keccak256("BACKEND_ROLE");
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
     event NFTSwapCompleted(address indexed user1, address indexed user2);
     event NFTSwapFailed(
         address indexed user1,
@@ -19,35 +26,29 @@ contract NFTSwap is ReentrancyGuard {
         uint256[] calldata tokenIdsGivenByB,
         address userA,
         address userB
-    ) external nonReentrant {
+    ) external nonReentrant onlyRole(BACKEND_ROLE) {
         require(
             nftContractsGivenByA.length == tokenIdsGivenByA.length &&
                 nftContractsGivenByB.length == tokenIdsGivenByB.length,
             "Array length mismatch"
         );
 
-        // userA 제공하는 NFT를 userB에게 전송
         bool successAGivesToB = _performNFTTransfers(
             nftContractsGivenByA,
             tokenIdsGivenByA,
             userA,
             userB
         );
-
-        // userB 제공하는 NFT를 userA에게 전송
         bool successBGivesToA = _performNFTTransfers(
             nftContractsGivenByB,
             tokenIdsGivenByB,
-            userA,
-            userB
+            userB,
+            userA
         );
 
-        if (successAGivesToB && successBGivesToA) {
-            emit NFTSwapCompleted(userA, userB);
-        } else {
-            emit NFTSwapFailed(userA, userB, "Transfer failed");
-            revert("NFT swap failed");
-        }
+        require(successAGivesToB && successBGivesToA, "NFT transfer failed");
+
+        emit NFTSwapCompleted(userA, userB);
     }
 
     function _performNFTTransfers(
@@ -67,5 +68,11 @@ contract NFTSwap is ReentrancyGuard {
             }
         }
         return true;
+    }
+
+    function grantBackendRole(
+        address backendAddress
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        grantRole(BACKEND_ROLE, backendAddress);
     }
 }
