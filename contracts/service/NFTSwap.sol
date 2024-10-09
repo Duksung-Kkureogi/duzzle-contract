@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -8,9 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract NFTSwap is ReentrancyGuard, AccessControl {
     bytes32 public constant BACKEND_ROLE = keccak256("BACKEND_ROLE");
 
-    constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
+    address[] private backendRoleMembers;
 
     event NFTSwapCompleted(address indexed user1, address indexed user2);
     event NFTSwapFailed(
@@ -18,6 +16,12 @@ contract NFTSwap is ReentrancyGuard, AccessControl {
         address indexed user2,
         string reason
     );
+    event BackendRoleGranted(address indexed account, address indexed sender);
+    event BackendRoleRevoked(address indexed account, address indexed sender);
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
 
     function executeNFTSwap(
         address[] calldata nftContractsGivenByA,
@@ -46,9 +50,12 @@ contract NFTSwap is ReentrancyGuard, AccessControl {
             userA
         );
 
-        require(successAGivesToB && successBGivesToA, "NFT transfer failed");
-
-        emit NFTSwapCompleted(userA, userB);
+        if (successAGivesToB && successBGivesToA) {
+            emit NFTSwapCompleted(userA, userB);
+        } else {
+            emit NFTSwapFailed(userA, userB, "NFT transfer failed");
+            revert("NFT transfer failed");
+        }
     }
 
     function _performNFTTransfers(
@@ -71,8 +78,38 @@ contract NFTSwap is ReentrancyGuard, AccessControl {
     }
 
     function grantBackendRole(
-        address backendAddress
+        address account
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(BACKEND_ROLE, backendAddress);
+        if (!hasRole(BACKEND_ROLE, account)) {
+            _grantRole(BACKEND_ROLE, account);
+            backendRoleMembers.push(account);
+            emit BackendRoleGranted(account, msg.sender);
+        }
+    }
+
+    function revokeBackendRole(
+        address account
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (hasRole(BACKEND_ROLE, account)) {
+            _revokeRole(BACKEND_ROLE, account);
+            for (uint i = 0; i < backendRoleMembers.length; i++) {
+                if (backendRoleMembers[i] == account) {
+                    backendRoleMembers[i] = backendRoleMembers[
+                        backendRoleMembers.length - 1
+                    ];
+                    backendRoleMembers.pop();
+                    break;
+                }
+            }
+            emit BackendRoleRevoked(account, msg.sender);
+        }
+    }
+
+    function getBackendRoleMembers() external view returns (address[] memory) {
+        return backendRoleMembers;
+    }
+
+    function getBackendRoleMemberCount() external view returns (uint256) {
+        return backendRoleMembers.length;
     }
 }
