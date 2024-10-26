@@ -1,4 +1,20 @@
+import { ZONES } from "./../constants/zones.constant";
 import { ethers } from "hardhat";
+
+const mappingMaterialItemTokenAddressToName = (address: string) => {
+  switch (address) {
+    case process.env.MATERIAL_ITEM_REDBRIK_CONTRACT_ADDRESS:
+      return `${address} (붉은 벽돌)`;
+    case process.env.MATERIAL_ITEM_SAND_CONTRACT_ADDRESS:
+      return `${address} (모래)`;
+    case process.env.MATERIAL_ITEM_HAMMER_CONTRACT_ADDRESS:
+      return `${address} (망치)`;
+    case process.env.MATERIAL_ITEM_GLASS_CONTRACT_ADDRESS:
+      return `${address} (유리)`;
+    default:
+      return address;
+  }
+};
 
 async function fetchSeasonStatusReport() {
   const playDuzzleInstance = await ethers.getContractAt(
@@ -33,7 +49,7 @@ async function fetchSeasonStatusReport() {
   for (let i = 0; i < materialItemTokens.length; i++) {
     console.log(
       "재료",
-      materialItemTokens[i],
+      mappingMaterialItemTokenAddressToName(materialItemTokens[i]),
       "최대 공급량",
       itemMaxSupplys[i],
       "아이템 발행량",
@@ -73,12 +89,15 @@ async function fetchSeasonStatusReport() {
     startedAt,
   ] = thisSeasonData;
   for (let i = 0; i < pieceCountOfZones.length; i++) {
-    console.log("zone", i, "퍼즐 조각 수", pieceCountOfZones[i]);
+    console.log(`====${i}=======${ZONES[i].nameKr}=========================`);
+    console.log("퍼즐 조각 수", pieceCountOfZones[i]);
 
     for (let j = 0; j < requiredItemsForMinting[i].length; j++) {
       console.log(
         "필요한 재료",
-        `${requiredItemsForMinting[i][j]} ${requiredItemAmount[i][j]}개\n`
+        `${mappingMaterialItemTokenAddressToName(
+          requiredItemsForMinting[i][j]
+        )} ${requiredItemAmount[i][j]}개\n`
       );
     }
   }
