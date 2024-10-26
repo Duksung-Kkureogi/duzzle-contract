@@ -11,6 +11,8 @@ const mappingMaterialItemTokenAddressToName = (address: string) => {
       return `${address} (망치)`;
     case process.env.MATERIAL_ITEM_GLASS_CONTRACT_ADDRESS:
       return `${address} (유리)`;
+    case process.env.MATERIAL_ITEM_XMAS_STOCKING_CONTRACT_ADDRESS:
+      return `${address} (크리스마스 양말)`;
     default:
       return address;
   }
