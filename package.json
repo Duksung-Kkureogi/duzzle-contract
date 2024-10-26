@@ -5,7 +5,8 @@
     "compile": "hardhat clean && hardhat compile --force",
     "deploy:amoy": "npx hardhat ignition deploy ignition/modules/PlayDuzzle.ts --network amoy --reset",
     "deploy:swap:local": "npx hardhat ignition deploy ignition/modules/NFTSwap.ts --network localhost --reset",
-    "console:amoy": "npx hardhat console --network amoy"
+    "console:amoy": "npx hardhat console --network amoy",
+    "script:amoy": "hardhat run --network amoy scripts/$FILE"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition-ethers": "^0.15.6",
